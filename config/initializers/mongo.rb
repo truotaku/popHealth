@@ -1,9 +1,10 @@
 MONGO_DB = Mongoid.default_session
+mongo_uri = ENV['MONGOLAB_URI']
 
 # js_collection = MONGO_DB['system.js']
 
 # unless js_collection.find_one('_id' => 'contains')
-#   js_collection.save('_id' => 'contains', 
+#   js_collection.save('_id' => 'contains',
 #                      'value' => BSON::Code.new("function( obj, target ) { return obj.indexOf(target) != -1; };"))
 # end
 

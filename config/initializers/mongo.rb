@@ -1,5 +1,4 @@
 MONGO_DB = Mongoid.default_session
-mongo_uri = ENV['MONGOLAB_URI']
 
 # js_collection = MONGO_DB['system.js']
 

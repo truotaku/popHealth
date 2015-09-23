@@ -30,7 +30,7 @@ module Api
       provider = provider_filter = nil
       if params[:provider_id].present?
         provider = Provider.find(params[:provider_id])
-        authorize! :read, provider 
+        authorize! :read, provider
         provider_filter = {}
         provider_filter['filters.providers'] = params[:provider_id] if params[:provider_id].present?
       end
@@ -38,7 +38,7 @@ module Api
                                    generate_header(provider),
                                    effective_date.to_i,
                                    end_date.years_ago(1),
-                                   end_date, provider_filter), content_type: "attachment/xml"
+                                   (end_date - 1.second), provider_filter), content_type: "attachment/xml"
     end
 
     api :GET, "/reports/patients" #/:id/:sub_id/:effective_date/:provider_id/:patient_type"
@@ -48,22 +48,22 @@ module Api
     param :provider_id, String, :desc => 'Provider ID for filtering quality report', :required => true
     param :patient_type, String, :desc => 'Outlier, Numerator, Denominator', :required => true
     description <<-CDESC
-      This action will generate an Excel spreadsheet of relevant QRDA Category I Document based on the category of patients selected. 
+      This action will generate an Excel spreadsheet of relevant QRDA Category I Document based on the category of patients selected.
     CDESC
     def patients
-      type = params[:patient_type]        
+      type = params[:patient_type]
       qr = QME::QualityReport.where(:effective_date => params[:effective_date].to_i, :measure_id => params[:id], :sub_id => params[:sub_id], "filters.providers" => params[:provider_id])
-      
+
       authorize! :read, Provider.find(params[:provider_id])
 
       records = (qr.count > 0) ? qr.first.patient_results : []
-   
+
       book = Spreadsheet::Workbook.new
       sheet = book.create_worksheet
-      format = Spreadsheet::Format.new :weight => :bold		  
-      
+      format = Spreadsheet::Format.new :weight => :bold
+
       measure = HealthDataStandards::CQM::Measure.where(id: params[:id]).first
-      
+
       eff = Time.at(params[:effective_date].to_i)
       end_date = eff.strftime("%D")
       start_date = eff.month.to_s + "/" + eff.day.to_s + "/" + (eff.year-1).to_s
@@ -74,8 +74,8 @@ module Api
       sheet.row(r+=1).push("Description: ", '', measure.description)
       sheet.row(r+=1).push("Reporting Period: ", '', start_date + " - " + end_date)
       sheet.row(r+=1).push("Group: ", '', patient_type(type))
-      (0..r).each do |i| 
-        sheet.row(i).set_format(0, format) 
+      (0..r).each do |i|
+        sheet.row(i).set_format(0, format)
       end
       # table headers
       sheet.row(r+=2).push('MRN', 'First Name', 'Last Name', 'Gender', 'Birthdate')
@@ -91,7 +91,7 @@ module Api
         end
       end
 
-      today = Time.now.strftime("%D")  
+      today = Time.now.strftime("%D")
       filename = "patients_" + measure.cms_id + "_" + patient_type(type) + "_" + "#{today}" + ".xls"
       data = StringIO.new '';
       book.write data;
@@ -119,14 +119,14 @@ module Api
 
       book = Spreadsheet::Workbook.new
       sheet = book.create_worksheet
-      format = Spreadsheet::Format.new :weight => :bold		  
-      
+      format = Spreadsheet::Format.new :weight => :bold
+
       if sub_id
         measure = HealthDataStandards::CQM::Measure.where(:id => measure_id, :sub_id => sub_id).first
       else
         measure = HealthDataStandards::CQM::Measure.where(:id => measure_id).first
       end
-      
+
       eff = Time.at(params[:effective_date].to_i)
       end_date = eff.strftime("%D")
       start_date = eff.month.to_s + "/" + eff.day.to_s + "/" + (eff.year-1).to_s
@@ -136,8 +136,8 @@ module Api
       sheet.row(r+=1).push("Name: ", measure.name)
       sheet.row(r+=1).push("Reporting Period: ", start_date + " - " + end_date)
       sheet.row(r+=1).push("Team: ", team.name)
-      (0..r).each do |i| 
-        sheet.row(i).set_format(0, format) 
+      (0..r).each do |i|
+        sheet.row(i).set_format(0, format)
       end
       # table headers
       sheet.row(r+=2).push('Provider Name', 'NPI', 'Numerator', 'Denominator', 'Exclusions', 'Percentage')
@@ -148,7 +148,7 @@ module Api
       providers.each do |provider|
         authorize! :read, provider
         query = {:measure_id => measure_id, :sub_id => sub_id, :effective_date => params[:effective_date].to_i, 'filters.providers' => [provider.id.to_s]}
-        cache = QME::QualityReport.where(query).first     
+        cache = QME::QualityReport.where(query).first
         if cache && cache.result
           performance_denominator = cache.result['DENOM'] - cache.result['DENEX']
           percent =  percentage(cache.result['NUMER'].to_f, performance_denominator.to_f)
@@ -183,9 +183,9 @@ module Api
       format = Spreadsheet::Format.new :weight => :bold
 
       user = User.where(:username => params[:username]).first || current_user
-      effective_date = params[:effective_date] || current_user.effective_date      
+      effective_date = params[:effective_date] || current_user.effective_date
       measure_ids = user.preferences['selected_measure_ids']
-      
+
       unless measure_ids.empty?
         selected_measures = measure_ids.map{ |id| HealthDataStandards::CQM::Measure.where(:id => id)}
         # report header
@@ -195,7 +195,7 @@ module Api
         eff = Time.at(params[:effective_date].to_i)
         end_date = eff.strftime("%D")
         start_date = eff.month.to_s + "/" + eff.day.to_s + "/" + (eff.year-1).to_s
-        
+
         r=0
         sheet.row(r).push("Reporting Period: ", '', start_date + " - " + end_date)
         sheet.row(r+=1).push("Provider: ", '', provider.full_name)
@@ -206,13 +206,13 @@ module Api
         # table headers
         sheet.row(r+=2).push('NQF ID', 'CMS ID', 'Sub ID', 'Title', 'Subtitle', 'Numerator', 'Denominator', 'Exclusions', 'Percentage')
         sheet.row(r).default_format = format
-        
+
         # populate rows
         r+=1
         selected_measures.each do |measure|
-          measure.sort_by!{|s| s.sub_id}.each do |sub|            
+          measure.sort_by!{|s| s.sub_id}.each do |sub|
             query = {:measure_id => sub.measure_id, :sub_id => sub.sub_id, :effective_date => effective_date, 'filters.providers' => [provider.id.to_s]}
-            cache = QME::QualityReport.where(query).first     
+            cache = QME::QualityReport.where(query).first
             performance_denominator = cache.result['DENOM'] - cache.result['DENEX']
             percent =  percentage(cache.result['NUMER'].to_f, performance_denominator.to_f)
             sheet.row(r).push(sub.nqf_id, sub.cms_id, sub.sub_id, sub.name, sub.subtitle, cache.result['NUMER'], performance_denominator, cache.result['DENEX'], percent)
@@ -258,13 +258,13 @@ module Api
 
 
     private
-    
+
     def patient_type(type)
       # IPP, NUMER, DENOM, antinumerator, DENEX
       case type
       when "IPP"
         "Initial Patient Population"
-      when "NUMER" 
+      when "NUMER"
         "Numerator"
       when "DENOM"
         "Denominator"
@@ -272,12 +272,12 @@ module Api
         "Outlier"
       when "DENEX"
         "Exclusion"
-      else 
+      else
         "N/A"
       end
     end
 
-    def percentage(numer, denom)	
+    def percentage(numer, denom)
       if denom == 0
         0
       else

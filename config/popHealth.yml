@@ -35,12 +35,12 @@ defaults: &defaults
     api_url: https://vsac.nlm.nih.gov/vsac/ws/RetrieveValueSet
   cda_header:
     :identifier:
-      :root:
-      :extension:
+      :root: testroot
+      :extension: kajsdlfkjalskjfd
     :authors:
     - :ids:
-      - :root: author_root
-        :extension: author_extension
+      - :root: doctor
+        :extension: kj4kj34k1j23k4j
       :device:
         :name: device_name
         :model: device_model
@@ -49,25 +49,25 @@ defaults: &defaults
       :time:
       :organization:
         :ids:
-        - :root: authors_organization_root
-          :extension: authors_organization_ext
+        - :root: facility
+          :extension: jfkasjf90f9j9jf
         :name: ''
     :custodian:
       :ids:
-      - :root: custodian_root
-        :extension: custodian_ext
+      - :root: custodian
+        :extension: aksjdflaksjdflkjasf
       :person:
         :given: ''
         :family: ''
       :organization:
         :ids:
-        - :root: custodian_rganization_root
-          :extension: custodian_organization_ext
+        - :root: custorg
+          :extension: laksjdflkajslkdfjla
         :name: ''
     :legal_authenticator:
       :ids:
-      - :root: legal_authenticator_root
-        :extension: legal_authenticator_ext
+      - :root: legalauth
+        :extension: alksjdflkasdjfl
       :addresses: []
       :telecoms: []
       :time:
@@ -76,8 +76,8 @@ defaults: &defaults
         :family:
       :organization:
         :ids:
-        - :root: legal_authenticator_org_root
-          :extension: legal_authenticator_org_ext
+        - :root: legalauthorg
+          :extension: alksjflkajsdlkjal
         :name: ''
 
 development:
